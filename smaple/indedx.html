@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px; /* Adds spacing between cards */
+            padding: 50px 20px; /* Adds padding to the container */
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+        }
+
+        .card {
+            height: 12rem;
+            width: 15rem;
+            border-radius: 1.5rem;
+            background-color: #ffffff;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adds shadow to cards */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effect */
+            padding: 20px;
+            cursor: pointer;
+        }
+        a {
+            text-decoration: none; /* Removes underline from the <a> tag */
+        }
+
+        .card img {
+            margin-bottom: 10px; /* Adds space between the image and text */
+        }
+
+        .card p {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .card:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* More prominent shadow on hover */
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column; /* Stacks cards vertically on smaller screens */
+                gap: 10px;
+            }
+
+            .card {
+                width: 80%; /* Makes the cards take up more width on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="#">
+            <div class="card">
+                <img src="student.png" alt="profile logo" height="75px">
+                <p>Manage Students</p>
+            </div>
+        </a>
+        <a href="#">
+            <div class="card">
+                <img src="profile.png" alt="profile logo" height="75px">
+                <p>View Profile</p>
+            </div>
+        </a>
+        <a href="#">
+            <div class="card">
+                <img src="icons8-performance.gif" alt="profile logo" height="75px">
+                <p>Track Performance</p>
+            </div>
+        </a>
+    </div>
+</body>
+</html>
