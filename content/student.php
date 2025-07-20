@@ -78,10 +78,17 @@ include "../backend/config.php";
 </div>
 
 <!-- Add File Modal -->
-<div class="modal fade" id="addFileModal" tabindex="-1" aria-labelledby="addFileModalLabel" aria-hidden="true">
+ <div class="modal fade" id="addFileModal" tabindex="-1" aria-labelledby="addFileModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="addFileForm" enctype="multipart/form-data" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addFileModalLabel">Add File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Your form fields remain unchanged -->
+                     <form id="addFileForm" enctype="multipart/form-data" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addFileModalLabel">Add File</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -98,19 +105,19 @@ include "../backend/config.php";
                     </div>
                     <div class="mb-3 d-none" id="add-batch-year-block">
                         <label class="form-label">Batch Year</label>
-                        <select class="form-select" id="add-batch-year" name="batch_year" required>
-                            <option value="">Select Year</option>
-                        </select>
+                       <select class="form-select" id="add-batch-year" name="batch_year">
+                         <option value="">Select Year</option>
+                       </select>
                     </div>
                     <div class="mb-3 d-none" id="add-department-block">
                         <label class="form-label">School & Department</label>
-                        <select class="form-select" id="add-department" name="department" required>
+                        <select class="form-select" id="add-department" name="department">
                             <option value="">Select Department</option>
                         </select>
                     </div>
                     <div class="mb-3 d-none" id="add-scholarship-type-block">
                         <label class="form-label">Scholarship Type</label>
-                        <select class="form-select" id="add-scholarship-type" name="scholarship_type" required>
+                        <select class="form-select" id="add-scholarship-type" name="scholarship_type">
                             <option value="">Select Scholarship Type</option>
                         </select>
                     </div>
@@ -138,6 +145,7 @@ include "../backend/config.php";
         </div>
     </div>
 </div>
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Add Bootstrap JS if not already on the page -->
@@ -295,11 +303,24 @@ $('#search-files').on('click', function() {
     loadFiles(params);
 });
 
-// Load files
 function loadFiles(params) {
     $.post('./backend/get_student_files.php', params, function(response) {
         let files = response;
-        if (typeof files === "string") files = JSON.parse(files);
+        // Ensure files is an array, even if parsing fails or response is not an array
+        if (typeof files === "string") {
+            try {
+                files = JSON.parse(files);
+            } catch (e) {
+                console.error("Failed to parse JSON response:", e);
+                files = []; // Default to an empty array on parse failure
+            }
+        }
+        // Explicitly check if files is an array before proceeding
+        if (!Array.isArray(files)) {
+             console.error("Expected an array response, but received:", files);
+             files = []; // Default to an empty array if not an array
+        }
+
         let tbody = $('#files-table-body');
         tbody.empty();
         if(files.length === 0) {
@@ -323,77 +344,89 @@ function loadFiles(params) {
 }
 
 // --- FIXED File Upload ---
+
+
+// --- FIXED File Upload ---
 $('#addFileForm').on('submit', function(e) {
     e.preventDefault();
-    
-    // Show loading state
+
     const submitBtn = $(this).find('button[type="submit"]');
     const uploadText = submitBtn.find('.upload-text');
     const uploadLoading = submitBtn.find('.upload-loading');
-    
+
+    // Show loading state
     uploadText.addClass('d-none');
     uploadLoading.removeClass('d-none');
     submitBtn.prop('disabled', true);
-    
-    // Create form data with CORRECTED field names to match upload script
-    var formData = new FormData();
-    
-    // Map form fields to upload script expected field names
+
+    // Validate file input
+    const fileInput = $('input[name="file_upload"]')[0];
+    if (!fileInput || !fileInput.files.length) {
+        alert('Please select a file to upload.');
+        resetButton();
+        return;
+    }
+
+    // Create form data
+    const formData = new FormData();
     formData.append('manage_type', $('#add-manage-type').val());
-    formData.append('batch_year', $('#add-batch-year').val());
+    formData.append('batch_years', $('#add-batch-year').val());
     formData.append('department', $('#add-department').val());
     formData.append('scholarship_type', $('#add-scholarship-type').val());
     formData.append('govt_scholarship_subtype', $('#add-govt-scholarship-subtype').val());
-    formData.append('file_upload', $('input[name="file_upload"]')[0].files[0]);
-    
+    formData.append('file_upload', fileInput.files[0]);
+
     // Debug: Log form data
-    console.log('Upload data:', {
+    console.log('Uploading:', {
         manage_type: $('#add-manage-type').val(),
-        batch_year: $('#add-batch-year').val(),
+        batch_years: $('#add-batch-year').val(),
         department: $('#add-department').val(),
         scholarship_type: $('#add-scholarship-type').val(),
         govt_scholarship_subtype: $('#add-govt-scholarship-subtype').val(),
-        file: $('input[name="file_upload"]')[0].files[0]?.name
+        file: fileInput.files[0].name
     });
-    
+
     $.ajax({
-        url: './backend/add_student_file.php',
+        url: './backend/store_student_file.php',
         type: 'POST',
         data: formData,
         contentType: false,
         processData: false,
         success: function(response) {
-            console.log('Upload response:', response);
-            let res = response;
-            if (typeof res === "string") {
-                try {
-                    res = JSON.parse(res);
-                } catch(e) {
-                    console.error('JSON parse error:', e);
-                    alert('Invalid response from server: ' + response);
-                    return;
-                }
+            console.log('Server response:', response);
+            let res;
+            try {
+                res = typeof response === 'object' ? response : JSON.parse(response);
+            } catch (err) {
+                alert('Server returned invalid JSON.');
+                return;
             }
-            
-            if(res.status === 'success') {
+
+            if (res.status === 'success') {
                 alert('File uploaded successfully!');
-                $('#addFileModal').modal('hide');
+                const modalEl = document.getElementById('addFileModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+
                 $('#addFileForm')[0].reset();
-                $('#search-files').trigger('click'); // Reload table
+                $('#search-files').trigger('click'); // Reload file list
             } else {
-                alert('Upload failed: ' + res.message);
+                alert('Upload failed: ' + (res.message || 'Unknown error.'));
             }
         },
         error: function(xhr, status, error) {
-            console.error('Upload error:', xhr.responseText);
+            console.error('Upload failed:', xhr.responseText);
             alert('Error uploading file: ' + error);
         },
         complete: function() {
-            // Reset loading state
-            uploadText.removeClass('d-none');
-            uploadLoading.addClass('d-none');
-            submitBtn.prop('disabled', false);
+            resetButton();
         }
     });
+
+    function resetButton() {
+        uploadText.removeClass('d-none');
+        uploadLoading.addClass('d-none');
+        submitBtn.prop('disabled', false);
+    }
 });
 </script>

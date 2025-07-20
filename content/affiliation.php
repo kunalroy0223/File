@@ -5,52 +5,59 @@ include "../backend/config.php";
 $affiliations = $conn->query("SELECT id, affiliation_name FROM affiliation_data")->fetchAll(PDO::FETCH_ASSOC);
 // Fetch academic years (normalized table assumed)
 $academic_years = $conn->query("SELECT id, year FROM academic_years ORDER BY year DESC")->fetchAll(PDO::FETCH_ASSOC);
-?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Affiliation Upload</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</head>
-<body>
-<div class="container py-4">
+?><div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb" id="breadcrumb">
+            <li class="breadcrumb-item"><a href="#" class="breadcrumb-link" data-page="academics.php">Academics</a></li>
+            <li class="breadcrumb-item">Affiliation & Approval</li>
+        </ol>
+    </nav>
+
     <h3>Affiliation & Approval</h3>
-    <form id="affiliation-form" class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label">Affiliation Type</label>
-            <select class="form-select" id="affiliation" name="affiliation">
-                <option value="">Select Affiliation</option>
-                <?php foreach ($affiliations as $aff): ?>
-                    <option value="<?= $aff['id'] ?>"><?= htmlspecialchars($aff['affiliation_name']) ?></option>
-                <?php endforeach; ?>
-            </select>
+    <p>Select affiliation details to view or add documents.</p>
+
+    <form id="affiliation-form">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <label class="form-label">Affiliation Type</label>
+                <select class="form-select" id="affiliation" name="affiliation">
+                    <option value="">Select Affiliation</option>
+                    <?php foreach ($affiliations as $aff): ?>
+                        <option value="<?= $aff['id'] ?>"><?= htmlspecialchars($aff['affiliation_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Academic Year</label>
+                <select class="form-select" id="academic-year" name="academic-year">
+                    <option value="">Select Academic Year</option>
+                    <?php foreach ($academic_years as $year): ?>
+                        <option value="<?= $year['id'] ?>"><?= htmlspecialchars($year['year']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-3" id="university-options-container" style="display:none;">
+                <label class="form-label">University Options</label>
+                <select class="form-select" id="university-options" name="university-options">
+                    <option value="">Select Option</option>
+                </select>
+            </div>
         </div>
-        <div class="col-md-4">
-            <label class="form-label">Academic Year</label>
-            <select class="form-select" id="academic-year" name="academic-year">
-                <option value="">Select Academic Year</option>
-                <?php foreach ($academic_years as $year): ?>
-                    <option value="<?= $year['id'] ?>"><?= htmlspecialchars($year['year']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="col-md-4" id="university-options-container" style="display:none;">
-            <label class="form-label">University Options</label>
-            <select class="form-select" id="university-options" name="university-options">
-                <option value="">Select Option</option>
-            </select>
-        </div>
-        <div class="col-md-12">
-            <button type="button" class="btn btn-primary" id="fetch-documents">Show Documents</button>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">Add Document</button>
+
+        <div class="mt-3 d-flex align-items-center">
+            <button type="button" class="btn btn-primary me-2" id="fetch-documents">
+                <i class="fas fa-search"></i> Show Documents
+            </button>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="fas fa-plus"></i> Add Document
+            </button>
         </div>
     </form>
 
     <div class="mt-4">
-        <table class="table table-bordered" id="documents-table">
-            <thead>
+        <h4>Document List</h4>
+        <table class="table table-bordered table-striped" id="documents-table">
+            <thead class="table-dark">
                 <tr>
                     <th>File Name</th>
                     <th>Office Location</th>
@@ -63,8 +70,7 @@ $academic_years = $conn->query("SELECT id, year FROM academic_years ORDER BY yea
         </table>
     </div>
 </div>
-
-<!-- Modal -->
+<!-- Add File Modal -->
 <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -74,35 +80,35 @@ $academic_years = $conn->query("SELECT id, year FROM academic_years ORDER BY yea
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
+          <div class="mb-2">
             <label class="form-label">Affiliation Type</label>
             <select class="form-select" id="modal-affiliation" name="affiliation" required>
-                <option value="">Select Affiliation</option>
-                <?php foreach ($affiliations as $aff): ?>
-                    <option value="<?= $aff['id'] ?>"><?= htmlspecialchars($aff['affiliation_name']) ?></option>
-                <?php endforeach; ?>
+              <option value="">Select Affiliation</option>
+              <?php foreach ($affiliations as $aff): ?>
+                  <option value="<?= $aff['id'] ?>"><?= htmlspecialchars($aff['affiliation_name']) ?></option>
+              <?php endforeach; ?>
             </select>
           </div>
-          <div class="mb-3">
+          <div class="mb-2">
             <label class="form-label">Academic Year</label>
             <select class="form-select" id="modal-academic-year" name="academic-year" required>
-                <option value="">Select Academic Year</option>
-                <?php foreach ($academic_years as $year): ?>
-                    <option value="<?= $year['id'] ?>"><?= htmlspecialchars($year['year']) ?></option>
-                <?php endforeach; ?>
+              <option value="">Select Academic Year</option>
+              <?php foreach ($academic_years as $year): ?>
+                  <option value="<?= $year['id'] ?>"><?= htmlspecialchars($year['year']) ?></option>
+              <?php endforeach; ?>
             </select>
           </div>
-          <div class="mb-3" id="modal-university-container" style="display:none;">
+          <div class="mb-2" id="modal-university-container" style="display:none;">
             <label class="form-label">University Options</label>
             <select class="form-select" id="modal-university-options" name="university-options">
-                <option value="">Select Option</option>
+              <option value="">Select Option</option>
             </select>
           </div>
-          <div class="mb-3">
+          <div class="mb-2">
             <label class="form-label">Office Location</label>
             <input type="text" class="form-control" name="office-location" required>
           </div>
-          <div class="mb-3">
+          <div class="mb-2">
             <label class="form-label">Upload File</label>
             <input type="file" class="form-control" name="file-upload" required>
           </div>
@@ -114,7 +120,6 @@ $academic_years = $conn->query("SELECT id, year FROM academic_years ORDER BY yea
     </div>
   </div>
 </div>
-
 <script>
 $('#affiliation').on('change', function() {
     if ($(this).val() == "1") {
@@ -203,5 +208,3 @@ $('#addDocumentForm').on('submit', function(e) {
     });
 });
 </script>
-</body>
-</html>
